@@ -3,6 +3,9 @@ $(function(){
     $('#work02_01').highcharts({
         chart: {
             type: 'column',
+            style: {
+                fontFamily: 'ubuntu'
+            }
         },
         title: {
             text: 'Top 10 films that had higher worldwide gross',
@@ -43,13 +46,13 @@ $(function(){
                 dataLabels: {
                 enabled: true,
                 rotation: 0,
-                color: '#FFFFFF',
+                color: '#000',
                 align: 'center',
+                shadow: true,
                 format: '{point.y:.0f}', // one decimal
                 y: 0, // 10 pixels down from the top
                 style: {
                     fontSize: '10px',
-                    fontFamily: 'Verdana, sans-serif'
                 }
             }
 
@@ -63,9 +66,13 @@ $(function(){
 $('#work02_02').highcharts({
         chart: {
             type: 'line',
+            style: {
+                fontFamily: 'ubuntu'
+            }
         },
         title: {
             text: 'Differences between films that won oscars and/or baftas awards',
+
         },
         xAxis: {
             categories: ['No Country for Old Men', "The King's Speech",'Slumdog Millionaire','The Artist','The Hurt Locker','Milk','The Fighter','Beginners','Black Swan','Inglourious Basterds','Juno','Michael Clayton','Midnight in Paris','Ratatouille','The Blind Side','The Dark Knight','The Help','There Will Be Blood','Up','WALL-E','Up in the Air']
