@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+    <html>
+        <head>
+			<title> Earthquake Data</title>
+			<link rel="stylesheet" href="css/dc.css">
+        <link rel="stylesheet" href="style.css">
+    		<link rel="stylesheet" href="css/styles.css">
+				<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css"/>
+				<link rel="stylesheet" href="css/leaflet.tooltip.css"/>
+			<script src="js/crossfilter.js" charset="utf-8"></script>
+    		<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+   			<script src="js/dc.js" charset="utf-8"></script>
+
+<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+<script src="js/leaflet.tooltip.js"></script>
+			
+		    <style type="text/css">
+  
+		      
+		    </style>
+        </head>
+        <body>
+		<div id="block">
+        <div id="title">
+             <a href="index.html" style="text-decoration:none; color:#0927a0;">Works - Scientific Visualization</a>
+             <div id="subtitle">
+                 Author: Danilo Borges da Silva
+             </div>
+        </div>
+        <div id="pagework"> 
+            <div id="pageworktitle">Class Work 4</div>
+            <div id="pageworkdate">11th April 2016</div>
+            <div id="pageworkdescription">	
+    
+			  <div>
+			    <div id='magnitude-chart'>
+			      <h4> Number of Events by Magnitude </h4>
+			    </div>
+			    <div id='depth-chart'>
+				  <h4> Events by Depth (km) </h4>
+			    </div>   
+			  </div>
+
+			  <div>
+			    <div id='time-chart'>
+			      <h4> Events per hour </h4>
+			    </div>
+			  </div>
+				<div id="mapid"></div>
+</div>      
+    </div>
+			<script type="text/javascript">
+			// Create the dc.js chart objects & link to div
+			var magnitudeBarChart = dc.barChart('#magnitude-chart');
+			var depthBarChart = dc.barChart('#depth-chart');
+			var timeLineChart = dc.lineChart('#time-chart');
+			
+			  var map = L.map('mapid').setView([-41.05,172.93], 5);
+               L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+               attribution: '&copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+               maxZoom: 17
+               }).addTo(map);
+			
+			// load data from a csv file
+			d3.csv("quakes.csv", function (data) {
+      // format our data
+            var dtgFormat = d3.time.format("%Y-%m-%dT%H:%M:%S");
+            data.forEach(function(d){
+                d.dataorigins = dtgFormat.parse(d.origintime.substr(0,19));
+								d.magnitude = d3.round(+d.magnitude,1);
+								d.depth = d3.round(+d.depth,0);
+								d.long = +d.longitude;
+								d.lat = +d.latitude;
+								var circle = L.circle([d.lat, d.long], 5000*d.magnitude, {
+                       color: '#fd8d3c',
+ 										   weight: 2,
+                       fillColor: '#fecc5c',
+                       fillOpacity: 0.5
+                       }).addTo(map);
+							  var tooltip = L.tooltip({
+												target: circle,
+												map: map,
+												html: "Magnitude: "+d.magnitude+"<br>Time: "+d.origintime.substr(0,19),
+												padding: '4px 8px'
+												});
+            });
+
+				 
+			  
+				            
+			  
+
+			  // Run the data through crossfilter and load our 'facts'
+				var facts = crossfilter(data);
+			 
+
+			  //Create a dimension for Magnitude
+				var magnitudeDim = facts.dimension(function(d){
+                return d.magnitude;
+         });
+			  
+			  //Create a group for Magnitude that just counts the number of elements in the group
+				var magnitudeByEventGroup = magnitudeDim.group();
+			  
+
+			  // Create a dimension for Depth
+				var depthDim = facts.dimension(function(d){
+                return d.depth;
+         });
+			 
+
+			  //Create a group for Depth that just counts the number of elements in the group
+			  var depthByEventGroup = depthDim.group();
+
+
+			  // Create a dimension just for the hour from the datetime in the dataset
+			  //hint: use d3.time.hour() function
+				var datetimeDim = facts.dimension(function(d){
+                return d3.time.hour(d.dataorigins);
+         });
+				 
+				 var hourByEventGroup = datetimeDim.group();
+
+			  //Create a group for the hour dimension that just counts the number of elements per hour
+        var datetimeByEventGroup = datetimeDim.group();
+			  // Setup the charts
+        magnitudeBarChart.width(480)
+                     .height(150)
+                     .margins({top: 20, right: 20, bottom: 20, left: 30})
+                     .dimension(magnitudeDim)
+                     .x(new d3.scale.linear().domain([0.5,7.5]))
+                     .gap(65)
+										 .elasticY(true)
+                     .brushOn(false)
+                     .group(magnitudeByEventGroup, 'Magnitude');
+			  // Configure Magnitude Bar Graph
+			  // 480 x 150
+			  // x dimension domain: [0.5, 7.5]
+			  //use a gap of 65, this number is very obscure. It seems to depend on the width of the chart and on the number of dimensions. It was found using trial and error.
+			  //set elasticY to true
+			  depthBarChart.width(480)
+                     .height(150)
+                     .margins({top: 20, right: 20, bottom: 20, left: 30})
+                     .dimension(depthDim)
+                     .x(new d3.scale.linear().domain([0,100]))
+                     .gap(1)
+										 .elasticY(true)
+                     .brushOn(false)
+                     .group(depthByEventGroup, 'Depth');
+        
+			  // Configure Depth bar graph
+			  // 480 x 150
+			  // x dimension domain: [0, 100]
+			 
+			  // Configure Time line graph
+			  // height: 150
+			  //x dimension: build the time scale from the data: d3.time.scale().domain(d3.extent(data, function(d) { return d.dtime; }))
+        timeLineChart.width(480)
+                     .height(150)
+                     .margins({top: 20, right: 20, bottom: 20, left: 20})
+                     .dimension(datetimeDim)
+                     .x(d3.time.scale().domain(d3.extent(data, function(d) { return d.dataorigins; })))
+                     .renderHorizontalGridLines(true)
+                     .brushOn(false)
+										 .xUnits(d3.time.month)
+										 .elasticY(true)
+                     .group(hourByEventGroup, 'Events');
+			  // Render the Charts
+			  dc.renderAll();
+
+			});
+			</script>
+				
+        </body>
+</html>
